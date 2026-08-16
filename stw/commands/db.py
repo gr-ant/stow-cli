@@ -1,8 +1,8 @@
 """stw db new/import/export/tables — DuckDB artifacts (plan.md §4).
 
 `import duckdb` is lazy — it happens inside these function bodies only, so
-`stw read` and friends never pay for it. Stow's own index is SQLite and is
-never addressable here: any path resolving to .stow/stow.db is rejected.
+`stw read` and friends never pay for it. stw's own index is SQLite and is
+never addressable here: any path resolving to .stw/stw.db is rejected.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .. import out
 from ..db import tx
-from ..errors import StowError
+from ..errors import stwError
 from ..index import reindex
 
 
@@ -41,7 +41,7 @@ def import_duckdb():
     try:
         import duckdb
     except ImportError as e:
-        raise StowError(
+        raise stwError(
             "E_NO_DUCKDB", "duckdb is not installed", "Run `pip install duckdb`."
         ) from e
     return duckdb
@@ -49,9 +49,9 @@ def import_duckdb():
 
 def guard_not_index(ws, rel: str) -> None:
     if ws.abs(rel) == ws.index_path:
-        raise StowError(
+        raise stwError(
             "E_FORBIDDEN",
-            "Stow's own index is not addressable as a DuckDB artifact",
+            "stw's own index is not addressable as a DuckDB artifact",
             "Point at a workspace .db artifact instead.",
         )
 
@@ -96,7 +96,7 @@ def run(ws, conn, args) -> int:
 
     if args.subcmd == "new":
         if abspath.exists():
-            raise StowError("E_EXISTS", f"{rel} already exists", "Use a different path.")
+            raise stwError("E_EXISTS", f"{rel} already exists", "Use a different path.")
         abspath.parent.mkdir(parents=True, exist_ok=True)
         duckdb.connect(str(abspath)).close()
         refresh_tables(ws, conn, rel, abspath)
@@ -104,14 +104,14 @@ def run(ws, conn, args) -> int:
         return 0
 
     if not abspath.exists():
-        raise StowError("E_NOT_FOUND", f"{rel} is not a DuckDB file", "Run `stw db new` first.")
+        raise stwError("E_NOT_FOUND", f"{rel} is not a DuckDB file", "Run `stw db new` first.")
 
     if args.subcmd == "import":
         csv_path = Path(args.csv)
         if not csv_path.is_absolute():
             csv_path = Path.cwd() / csv_path
         if not csv_path.exists():
-            raise StowError("E_NOT_FOUND", f"{args.csv} does not exist")
+            raise stwError("E_NOT_FOUND", f"{args.csv} does not exist")
         dconn = duckdb.connect(str(abspath))
         try:
             dconn.execute(
@@ -157,4 +157,4 @@ def run(ws, conn, args) -> int:
         out.emit("\n".join(lines) if lines else "no tables", {"path": rel, "tables": data})
         return 0
 
-    raise StowError("E_USAGE", f"unknown db subcommand {args.subcmd!r}")
+    raise stwError("E_USAGE", f"unknown db subcommand {args.subcmd!r}")

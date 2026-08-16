@@ -1,6 +1,6 @@
 """Embedder sidecar (plan.md §6).
 
-Stow never loads a model. It shells JSONL to `config.embed.cmd` and reads
+stw never loads a model. It shells JSONL to `config.embed.cmd` and reads
 JSONL back, matched on id. Vectors are stored as float32 little-endian BLOBs
 via `struct` so writing them never requires numpy.
 

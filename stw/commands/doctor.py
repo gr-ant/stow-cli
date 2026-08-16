@@ -1,7 +1,7 @@
 """Workspace health report (plan.md §9).
 
 A report, not a failure: exits 1 when problems exist but never raises
-StowError — `doctor` must always finish and print what it found.
+stwError — `doctor` must always finish and print what it found.
 """
 
 from __future__ import annotations

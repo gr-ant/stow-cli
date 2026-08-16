@@ -1,6 +1,6 @@
-# Stow — Design
+# stw — Design
 
-A CLI workspace manager for agents. The agent stows markdown and DuckDB files into a directory it controls; Stow keeps the structure navigable and the context cheap to load.
+A CLI workspace manager for agents. The agent stows markdown and DuckDB files into a directory it controls; stw keeps the structure navigable and the context cheap to load.
 
 **Status:** v0 decisions locked (§14). Revision 2 — resolves the embed-prefix/`mv` contradiction, moves the index off DuckDB, and takes the batch embed off the read path.
 
@@ -8,7 +8,7 @@ A CLI workspace manager for agents. The agent stows markdown and DuckDB files in
 
 ## 1. Premise
 
-The agent owns a workspace. It decides the folder structure, writes markdown into it, spins up DuckDB files where tabular beats prose, and reorganizes all of it over time. Stow is how it does that in one command instead of five.
+The agent owns a workspace. It decides the folder structure, writes markdown into it, spins up DuckDB files where tabular beats prose, and reorganizes all of it over time. stw is how it does that in one command instead of five.
 
 **Everything goes through the CLI.** Because writes are mediated, the index is correct by construction — no reconciliation loop, no drift, no stale map.
 
@@ -26,8 +26,8 @@ Agents route around friction toward whatever is cheapest. The moment `stw write`
 
 ```
 ./
-├── .stow/
-│   ├── stow.db            # index: SQLite (WAL) — registry, headings, links, chunks, embeddings, FTS
+├── .stw/
+│   ├── stw.db            # index: SQLite (WAL) — registry, headings, links, chunks, embeddings, FTS
 │   ├── objects/           # content-addressed history: ab/cdef… (zlib-compressed blobs)
 │   ├── config.toml
 │   └── embed.py           # optional embedder sidecar (user-supplied)
@@ -37,14 +37,14 @@ Agents route around friction toward whatever is cheapest. The moment `stw write`
 └── data/*.db              # DuckDB files the agent creates as workspace artifacts
 ```
 
-`.stow/stow.db` is the single source of truth. `map.md` is rendered from it. Deleting `map.md` loses nothing; deleting `.stow/` loses the index and the history but not the work, and `stw sync` rebuilds the index from the files on disk.
+`.stw/stw.db` is the single source of truth. `map.md` is rendered from it. Deleting `map.md` loses nothing; deleting `.stw/` loses the index and the history but not the work, and `stw sync` rebuilds the index from the files on disk.
 
 ### config.toml
 
 ```toml
 [workspace]
 include = ["**/*.md", "**/*.db"]
-exclude = ["node_modules/**", ".stow/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]   # generated files stay out of the index
+exclude = ["node_modules/**", ".stw/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]   # generated files stay out of the index
 
 [map]
 regenerate = "on-write"      # on-write | on-demand
@@ -55,7 +55,7 @@ enabled  = true
 keep     = 50                # versions per path
 
 [embed]
-cmd          = ["python", ".stow/embed.py"]
+cmd          = ["python", ".stw/embed.py"]
 model        = "bge-small-en-v1.5"
 dim          = 384
 batch        = 64
@@ -88,7 +88,7 @@ stw tag notes/rag.md +stale -wip
 
 **There is no verb-less form.** `stw PATH < content` would save six characters over `stw write PATH` and buy a permanent parse ambiguity against every subcommand name. `write` is the verb.
 
-Every write creates parent directories, injects frontmatter if absent, parses the heading tree and links, snapshots the prior content into `.stow/objects/`, and updates the index. One confirmation line back:
+Every write creates parent directories, injects frontmatter if absent, parses the heading tree and links, snapshots the prior content into `.stw/objects/`, and updates the index. One confirmation line back:
 
 ```
 stowed research/rag.md · 1.8k · 6 headings · 4 links (1 unresolved)
@@ -112,7 +112,7 @@ Rules:
 
 ### History
 
-Every destructive write (`write`, `set`, `append`, `rm`, `mv`) snapshots the prior bytes into `.stow/objects/` keyed by sha256. Stow already hashes every file it touches, so this costs one zlib write and nothing else.
+Every destructive write (`write`, `set`, `append`, `rm`, `mv`) snapshots the prior bytes into `.stw/objects/` keyed by sha256. stw already hashes every file it touches, so this costs one zlib write and nothing else.
 
 ```sh
 stw log notes/rag.md            # 7 versions · sha · size · when · command
@@ -141,7 +141,7 @@ Each is a task the agent would otherwise do by hand or get wrong. That's what ma
 
 ## 4. Databases as artifacts
 
-The agent creates DuckDB files wherever it wants them. They're workspace files, not tables inside Stow's index.
+The agent creates DuckDB files wherever it wants them. They're workspace files, not tables inside stw's index.
 
 ```sh
 stw db new data/experiments.db
@@ -153,7 +153,7 @@ stw db export data/experiments.db --table runs --csv out.csv
 
 Registered like markdown files, so they appear in the map with their table list and row counts. `stw map` shows the whole workspace — prose and structured together, which is the point.
 
-Stow's own index is SQLite and is never addressable through `stw sql`. CSV is import/export only: DuckDB reads it natively, and a separate CSV engine buys untyped columns and quoting bugs for nothing.
+stw's own index is SQLite and is never addressable through `stw sql`. CSV is import/export only: DuckDB reads it natively, and a separate CSV engine buys untyped columns and quoting bugs for nothing.
 
 **`import duckdb` is lazy.** It happens inside the `db`/`sql` command bodies only. This is the entire 200–400ms startup complaint from the original draft, and confining it to the two commands that need it removes it from the ~95% of invocations that don't.
 
@@ -163,11 +163,11 @@ Stow's own index is SQLite and is never addressable through `stw sql`. CSV is im
 
 **The index is SQLite in WAL mode, not DuckDB.** This is a change from revision 1 and it deletes an entire failure mode.
 
-The index workload is OLTP-shaped: one small transaction per file write, point lookups by path, many short reads interleaved with writes from parallel agent tool calls. DuckDB is a single-writer, single-process columnar engine — which is why revision 1 needed `flock` on `.stow/lock`, a 5s timeout, and an `E_LOCKED` error the agent has to recover from. SQLite in WAL mode gives concurrent readers alongside a writer at the library level, so the lock file, the timeout, and `E_LOCKED`-as-a-normal-outcome all go away.
+The index workload is OLTP-shaped: one small transaction per file write, point lookups by path, many short reads interleaved with writes from parallel agent tool calls. DuckDB is a single-writer, single-process columnar engine — which is why revision 1 needed `flock` on `.stw/lock`, a 5s timeout, and an `E_LOCKED` error the agent has to recover from. SQLite in WAL mode gives concurrent readers alongside a writer at the library level, so the lock file, the timeout, and `E_LOCKED`-as-a-normal-outcome all go away.
 
 The rest follows: FTS5 for BM25 (mature, ships in the stdlib module) and vectors as `float32` BLOBs scored in-process (§8).
 
-The cost is shipping two engines. Stow needs DuckDB anyway for `data/*.db` artifacts, so the real trade is *two engines each doing what it is good at* versus *one engine plus a lock file and a recoverable-error path*. The second is worse for a tool whose premise is that friction is a bug.
+The cost is shipping two engines. stw needs DuckDB anyway for `data/*.db` artifacts, so the real trade is *two engines each doing what it is good at* versus *one engine plus a lock file and a recoverable-error path*. The second is worse for a tool whose premise is that friction is a bug.
 
 ### Schema
 
@@ -241,7 +241,7 @@ Large backfills belong in an explicit `stw embed`, which is allowed to take as l
 
 ### Embedder contract
 
-Stow never loads a model. It shells out: JSONL in, JSONL out, matched on `id`.
+stw never loads a model. It shells out: JSONL in, JSONL out, matched on `id`.
 
 ```
 in : {"id": "a3f9…", "text": "passage: Chunking > Overlap\n\n…"}
@@ -286,7 +286,7 @@ stw links PATH · stw backlinks PATH · stw doctor · stw log PATH
 Not a nicety — it's what the agent reads first to know what it knows. That means it must be cheap to read whole and must describe *purpose*, not just enumerate paths:
 
 ```markdown
-<!-- generated by stow · do not edit -->
+<!-- generated by stw · do not edit -->
 # Workspace map
 42 files · 118 links · 2 broken · updated 2026-08-16T09:12Z
 
@@ -376,7 +376,7 @@ Read commands stat the files they touch and emit `W_STALE` if something moved un
 
 A CLI the agent doesn't know exists gets used zero times — and in a design where the write path *is* the product, an unused CLI is a workspace with no index at all. This is the highest-risk item in the project, well above startup latency.
 
-`stw init` writes a short, complete command reference into `AGENTS.md` (creating or appending under a `<!-- stow -->` marker it can later update in place). Same for `CLAUDE.md` if present.
+`stw init` writes a short, complete command reference into `AGENTS.md` (creating or appending under a `<!-- stw -->` marker it can later update in place). Same for `CLAUDE.md` if present.
 
 The stronger version, and the intended follow-on: ship the same command surface as an MCP server. `AGENTS.md` is a suggestion the agent may not re-read; a tool list is structurally unskippable. The CLI stays the implementation underneath.
 
@@ -394,9 +394,9 @@ The stronger version, and the intended follow-on: ship the same command surface 
 | Search default | Hybrid (RRF) | Agent queries are full of exact identifiers |
 | Verb-less write | **Cut** | Six characters vs a permanent parse ambiguity |
 | Duplicate headings | Warn on write, error on address | Write path stays frictionless |
-| History | Content-addressed `.stow/objects` + `log`/`undo` | Nearly free; `write` is otherwise unrecoverable |
+| History | Content-addressed `.stw/objects` + `log`/`undo` | Nearly free; `write` is otherwise unrecoverable |
 | Language (v0) | **Python 3.12**, stdlib-first | numpy and duckdb both optional at import time |
-| Binary name | **`stw`** | GNU Stow is widely installed; no PATH collision |
+| Binary name | **`stw`** |  GNUSTW  is widely installed; no PATH collision |
 
 **Language.** The embedder is a subprocess, so the core is free to be anything. Python reaches v0 fastest and the startup complaint is answered by lazy imports (§4) rather than by a rewrite.
 
@@ -404,7 +404,7 @@ Measured on the v0 implementation: `stw read`, `stw map`, and `stw find --text-o
 
 The same lazy-import discipline makes both heavy dependencies genuinely optional: on a stdlib-only interpreter the full write surface, read surface, graph, and hybrid search all work (vector scoring falls back to pure Python), and `stw sql` degrades to a named `E_NO_DUCKDB` naming the install command.
 
-**Name.** GNU Stow is a symlink farm manager that a lot of people have installed for dotfiles. Shipping a binary called `stow` means someone's `stow -R` does something bewildering. The project is Stow; the binary is `stw`.
+**Name.**  GNUSTW  is a symlink farm manager that a lot of people have installed for dotfiles. Shipping a binary called `stw` means someone's `stw -R` does something bewildering. The project is stw; the binary is `stw`.
 
 ---
 

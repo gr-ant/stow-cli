@@ -1,4 +1,4 @@
-"""Config loading. Defaults live here; .stow/config.toml overrides them."""
+"""Config loading. Defaults live here; .stw/config.toml overrides them."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ DEFAULTS: dict[str, Any] = {
     "workspace": {
         "include": ["**/*.md", "**/*.db"],
         # Generated files stay out of the index: map.md listing itself, or `find`
-        # returning Stow's own usage blurb, is noise the agent pays for.
-        "exclude": ["node_modules/**", ".stow/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"],
+        # returning stw's own usage blurb, is noise the agent pays for.
+        "exclude": ["node_modules/**", ".stw/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"],
     },
     "map": {"regenerate": "on-write", "depth": 1},
     "history": {"enabled": True, "keep": 50},
@@ -32,7 +32,7 @@ DEFAULTS: dict[str, Any] = {
 TEMPLATE = """\
 [workspace]
 include = ["**/*.md", "**/*.db"]
-exclude = ["node_modules/**", ".stow/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
+exclude = ["node_modules/**", ".stw/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
 
 [map]
 regenerate = "on-write"      # on-write | on-demand
@@ -43,7 +43,7 @@ enabled = true
 keep    = 50                 # versions kept per path
 
 [embed]
-# cmd        = ["python", ".stow/embed.py"]
+# cmd        = ["python", ".stw/embed.py"]
 model        = "bge-small-en-v1.5"
 dim          = 384
 batch        = 64
@@ -71,7 +71,7 @@ def _merge(base: dict, over: dict) -> dict:
 
 def load(root: Path) -> dict[str, Any]:
     """Load config for a workspace root, merged over DEFAULTS."""
-    p = root / ".stow" / "config.toml"
+    p = root / ".stw" / "config.toml"
     if not p.exists():
         return copy.deepcopy(DEFAULTS)
     with p.open("rb") as fh:

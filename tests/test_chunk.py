@@ -4,8 +4,8 @@ the heading path only, never the file path — that's what makes `mv` free
 
 from __future__ import annotations
 
-from stow.chunker import chunk_document, embed_input
-from stow.md import parse_headings
+from stw.chunker import chunk_document, embed_input
+from stw.md import parse_headings
 
 CFG = {"max_chars": 400, "min_chars": 80, "overlap": 0.2}
 

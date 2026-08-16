@@ -11,11 +11,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import NoWorkspace, StowError
+from .errors import NoWorkspace, stwError
 from . import config as config_mod
 
-STOW_DIR = ".stow"
-INDEX_NAME = "stow.db"
+STW_DIR = ".stw"
+INDEX_NAME = "stw.db"
 
 
 @dataclass
@@ -26,10 +26,10 @@ class Workspace:
     # -- discovery ---------------------------------------------------------
     @classmethod
     def find(cls, start: Path | None = None) -> "Workspace":
-        """Walk up from `start` looking for .stow/. Raises NoWorkspace."""
+        """Walk up from `start` looking for .stw/. Raises NoWorkspace."""
         cur = (start or Path.cwd()).resolve()
         for cand in [cur, *cur.parents]:
-            if (cand / STOW_DIR).is_dir():
+            if (cand / STW_DIR).is_dir():
                 return cls(root=cand, config=config_mod.load(cand))
         raise NoWorkspace(str(cur))
 
@@ -40,16 +40,16 @@ class Workspace:
 
     # -- paths -------------------------------------------------------------
     @property
-    def stow_dir(self) -> Path:
-        return self.root / STOW_DIR
+    def stw_dir(self) -> Path:
+        return self.root / STW_DIR
 
     @property
     def index_path(self) -> Path:
-        return self.stow_dir / INDEX_NAME
+        return self.stw_dir / INDEX_NAME
 
     @property
     def objects_dir(self) -> Path:
-        return self.stow_dir / "objects"
+        return self.stw_dir / "objects"
 
     def rel(self, path: str | Path) -> str:
         """Normalize any user-supplied path to a workspace-relative POSIX string."""
@@ -59,14 +59,14 @@ class Workspace:
         try:
             r = p.resolve().relative_to(self.root)
         except ValueError:
-            raise StowError(
+            raise stwError(
                 "E_OUTSIDE",
                 f"{path} is outside the workspace ({self.root})",
                 "Paths must be inside the workspace root.",
             ) from None
         s = r.as_posix()
         if s in (".", ""):
-            raise StowError("E_USAGE", "expected a file path, got the workspace root")
+            raise stwError("E_USAGE", "expected a file path, got the workspace root")
         return s
 
     def abs(self, rel: str) -> Path:
@@ -84,7 +84,7 @@ class Workspace:
         """Every included path in the workspace, sorted."""
         out: list[str] = []
         for dirpath, dirnames, filenames in os.walk(self.root):
-            dirnames[:] = [d for d in dirnames if d not in (STOW_DIR, ".git", "node_modules")]
+            dirnames[:] = [d for d in dirnames if d not in (STW_DIR, ".git", "node_modules")]
             for fn in filenames:
                 rel = (Path(dirpath) / fn).relative_to(self.root).as_posix()
                 if self.is_included(rel):

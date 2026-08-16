@@ -1,13 +1,13 @@
 """Error and warning types.
 
-Every failure the agent can hit is a StowError with a machine-parseable code on
+Every failure the agent can hit is a stwError with a machine-parseable code on
 stderr that names the next action (plan.md §11).
 """
 
 from __future__ import annotations
 
 
-class StowError(Exception):
+class stwError(Exception):
     """A named, recoverable failure.
 
     code: E_* identifier, first token on the stderr line.
@@ -33,21 +33,21 @@ class StowError(Exception):
         return {"error": self.code, "message": self.message, "hint": self.hint}
 
 
-class NoWorkspace(StowError):
+class NoWorkspace(stwError):
     def __init__(self, start: str) -> None:
         super().__init__(
             "E_NO_WORKSPACE",
-            f"no .stow/ found at or above {start}",
+            f"no .stw/ found at or above {start}",
             "Run `stw init` to create one.",
         )
 
 
-class NotFound(StowError):
+class NotFound(stwError):
     def __init__(self, path: str) -> None:
         super().__init__("E_NOT_FOUND", f"{path} is not in the workspace")
 
 
-class AmbiguousHeading(StowError):
+class AmbiguousHeading(stwError):
     def __init__(self, path: str, heading: str, lines: list[int]) -> None:
         where = ", ".join(f"L{n}" for n in lines)
         super().__init__(
@@ -57,7 +57,7 @@ class AmbiguousHeading(StowError):
         )
 
 
-class NoSuchHeading(StowError):
+class NoSuchHeading(stwError):
     def __init__(self, path: str, heading: str) -> None:
         super().__init__(
             "E_NO_SUCH_HEADING",
@@ -66,7 +66,7 @@ class NoSuchHeading(StowError):
         )
 
 
-class StaleSection(StowError):
+class StaleSection(stwError):
     def __init__(self, path: str, heading: str, expected: str, found: str, lines: str) -> None:
         super().__init__(
             "E_STALE_SECTION",
@@ -75,7 +75,7 @@ class StaleSection(StowError):
         )
 
 
-class Backlinks(StowError):
+class Backlinks(stwError):
     def __init__(self, path: str, srcs: list[str]) -> None:
         super().__init__(
             "E_BACKLINKS",
@@ -84,12 +84,12 @@ class Backlinks(StowError):
         )
 
 
-class Exists(StowError):
+class Exists(stwError):
     def __init__(self, path: str) -> None:
         super().__init__("E_EXISTS", f"{path} already exists", "Use `stw write` to overwrite.")
 
 
-class DimMismatch(StowError):
+class DimMismatch(stwError):
     def __init__(self, want: int, got: int) -> None:
         super().__init__(
             "E_DIM_MISMATCH",
@@ -98,16 +98,16 @@ class DimMismatch(StowError):
         )
 
 
-class NoEmbedder(StowError):
+class NoEmbedder(stwError):
     def __init__(self) -> None:
         super().__init__(
             "E_NO_EMBEDDER",
             "no [embed] cmd configured",
-            "Use --text-only, or set embed.cmd in .stow/config.toml.",
+            "Use --text-only, or set embed.cmd in .stw/config.toml.",
         )
 
 
-class EmbedFailed(StowError):
+class EmbedFailed(stwError):
     def __init__(self, detail: str, pending: int) -> None:
         super().__init__(
             "E_EMBED",
@@ -116,7 +116,7 @@ class EmbedFailed(StowError):
         )
 
 
-class Locked(StowError):
+class Locked(stwError):
     def __init__(self, seconds: float) -> None:
         super().__init__(
             "E_LOCKED",
@@ -125,6 +125,6 @@ class Locked(StowError):
         )
 
 
-class Usage(StowError):
+class Usage(stwError):
     def __init__(self, message: str, hint: str | None = None) -> None:
         super().__init__("E_USAGE", message, hint)

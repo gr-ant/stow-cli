@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from stow.db import connect
+from stw.db import connect
 
 
 def test_mv_leaves_no_trace_of_the_old_path(cli, ws_dir):
@@ -31,7 +31,7 @@ def test_mv_leaves_no_trace_of_the_old_path(cli, ws_dir):
     paths = json.dumps(payload)
     assert "research/rag.md" not in paths
 
-    ws_conn = connect(ws_dir / ".stow" / "stow.db")
+    ws_conn = connect(ws_dir / ".stw" / "stw.db")
     try:
         rows = [r["path"] for r in ws_conn.execute("SELECT path FROM files")]
         assert rows == ["notes/rag.md"]

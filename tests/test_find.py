@@ -9,7 +9,7 @@ from pathlib import Path
 
 from tests.helpers import seed
 
-from stow.vectors import _cosine_topk_py, cosine_topk
+from stw.vectors import _cosine_topk_py, cosine_topk
 
 ROOT = Path(__file__).resolve().parent.parent
 EMBED_HASH = ROOT / "examples" / "embed_hash.py"
@@ -21,7 +21,7 @@ def _configure(ws_dir: Path, *, dim=16, batch=8, max_inline=256) -> None:
     text = f"""\
 [workspace]
 include = ["**/*.md", "**/*.db"]
-exclude = ["node_modules/**", ".stow/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
+exclude = ["node_modules/**", ".stw/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
 
 [embed]
 cmd = [{cmd_toml}]
@@ -38,7 +38,7 @@ max_chars = 400
 min_chars = 40
 overlap = 0.15
 """
-    (ws_dir / ".stow" / "config.toml").write_text(text)
+    (ws_dir / ".stw" / "config.toml").write_text(text)
 
 
 def _vec_blob(xs: list[float]) -> bytes:

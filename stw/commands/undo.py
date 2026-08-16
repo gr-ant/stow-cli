@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 
 from .. import db, history, out
-from ..errors import StowError
+from ..errors import stwError
 from ..hashing import short
 from ..index import reindex, reresolve_incoming
 
@@ -22,7 +22,7 @@ def run(ws, conn, args) -> int:
     rel = ws.rel(args.path)
     rows = history.versions(conn, rel)
     if not rows:
-        raise StowError("E_NOT_FOUND", f"no history for {rel}", "Nothing to undo.")
+        raise stwError("E_NOT_FOUND", f"no history for {rel}", "Nothing to undo.")
 
     target = rows[0]
     data = history.read_version(ws, target["sha"])

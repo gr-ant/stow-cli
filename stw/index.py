@@ -2,7 +2,7 @@
 
 Every write command funnels through reindex(). Because writes are mediated the
 index is correct by construction; `stw sync` (plan.md §12) is the repair path
-for the times something edits a file behind Stow's back.
+for the times something edits a file behind stw's back.
 """
 
 from __future__ import annotations

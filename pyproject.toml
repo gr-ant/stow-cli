@@ -1,5 +1,5 @@
 [project]
-name = "stow-cli"
+name = "stw"
 version = "0.1.0"
 description = "A CLI workspace manager for agents"
 requires-python = ">=3.11"
@@ -11,7 +11,7 @@ data = ["duckdb>=0.10"]
 dev = ["pytest>=7", "numpy>=1.24", "duckdb>=0.10"]
 
 [project.scripts]
-stw = "stow.cli:main"
+stw = "stw.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Dev entry point: run stw straight from a checkout, preferring the project venv.
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+py="$root/.venv/bin/python"
+[ -x "$py" ] || py="$(command -v python3)"
+PYTHONPATH="$root${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m stw "$@"

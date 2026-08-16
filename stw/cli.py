@@ -19,7 +19,7 @@ from pathlib import Path
 
 from . import __version__
 from .db import connect
-from .errors import StowError, Usage
+from .errors import stwError, Usage
 from . import out
 from .workspace import Workspace
 
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     try:
         gl, rest = _split_globals(argv)
-    except StowError as e:
+    except stwError as e:
         out.error(e.render())
         return e.exit_code
 
@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
 
     mod_name, summary = COMMANDS[name]
     try:
-        mod = importlib.import_module(f".commands.{mod_name}", package="stow")
+        mod = importlib.import_module(f".commands.{mod_name}", package="stw")
     except ModuleNotFoundError as e:
         out.error(f"E_UNIMPLEMENTED: `stw {name}` is not built yet ({e}).")
         return 3
@@ -153,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         elif gl.dir:
             args.dir = gl.dir
         return int(mod.run(ws, conn, args) or 0)
-    except StowError as e:
+    except stwError as e:
         if out.is_json():
             import json as _json
             print(_json.dumps(e.to_json()))

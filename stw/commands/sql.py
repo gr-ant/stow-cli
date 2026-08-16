@@ -1,6 +1,6 @@
 """stw sql PATH QUERY — run SQL against a DuckDB artifact (plan.md §4, §10).
 
-`import duckdb` is lazy, same reasoning as stow/commands/db.py. Bare SELECTs
+`import duckdb` is lazy, same reasoning as stw/commands/db.py. Bare SELECTs
 get a default LIMIT 100 so an agent can never accidentally dump 40k rows;
 the footer says so and names how many rows actually exist.
 """
@@ -12,7 +12,7 @@ import json as jsonlib
 import re
 
 from .. import out
-from ..errors import StowError
+from ..errors import stwError
 from .db import import_duckdb, guard_not_index, refresh_tables
 
 DEFAULT_LIMIT = 100
@@ -33,7 +33,7 @@ def run(ws, conn, args) -> int:
     guard_not_index(ws, rel)
     abspath = ws.abs(rel)
     if not abspath.exists():
-        raise StowError("E_NOT_FOUND", f"{rel} is not a DuckDB file", "Run `stw db new` first.")
+        raise stwError("E_NOT_FOUND", f"{rel} is not a DuckDB file", "Run `stw db new` first.")
 
     query = args.query
     is_select = bool(_SELECT_RE.match(query))

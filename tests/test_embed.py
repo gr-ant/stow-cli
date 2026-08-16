@@ -13,7 +13,7 @@ EMBED_HASH = ROOT / "examples" / "embed_hash.py"
 
 
 def _configure(ws_dir: Path, *, cmd=None, dim=16, script_dim=None, batch=4, max_inline=256) -> None:
-    """Point .stow/config.toml at the deterministic embed_hash.py sidecar
+    """Point .stw/config.toml at the deterministic embed_hash.py sidecar
     (or a caller-supplied `cmd`), for tests that need an actual embedder."""
     if cmd is None:
         cmd = [sys.executable, str(EMBED_HASH), "--dim", str(script_dim if script_dim is not None else dim)]
@@ -21,7 +21,7 @@ def _configure(ws_dir: Path, *, cmd=None, dim=16, script_dim=None, batch=4, max_
     text = f"""\
 [workspace]
 include = ["**/*.md", "**/*.db"]
-exclude = ["node_modules/**", ".stow/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
+exclude = ["node_modules/**", ".stw/**", ".git/**", "map.md", "AGENTS.md", "CLAUDE.md"]
 
 [embed]
 cmd = [{cmd_toml}]
@@ -38,7 +38,7 @@ max_chars = 400
 min_chars = 40
 overlap = 0.15
 """
-    (ws_dir / ".stow" / "config.toml").write_text(text)
+    (ws_dir / ".stw" / "config.toml").write_text(text)
 
 
 def _section(n: int, words: str = "content") -> str:
@@ -49,7 +49,7 @@ def _section(n: int, words: str = "content") -> str:
 # vector <-> blob roundtrip (no CLI needed)
 # --------------------------------------------------------------------------
 def test_vector_blob_roundtrip():
-    from stow.embedder import blob_to_vector, vector_to_blob
+    from stw.embedder import blob_to_vector, vector_to_blob
 
     vec = [0.5, -1.25, 3.0, 0.0, -0.125]
     blob = vector_to_blob(vec)

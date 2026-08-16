@@ -6,9 +6,9 @@ import json
 
 from helpers import seed
 
-from stow.db import connect
-from stow.index import reresolve_incoming
-from stow.workspace import Workspace
+from stw.db import connect
+from stw.index import reresolve_incoming
+from stw.workspace import Workspace
 
 
 def _resolve_all(root) -> None:

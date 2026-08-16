@@ -1,6 +1,6 @@
 """Repair the index from files on disk (plan.md §12).
 
-The repair tool for the times a file gets edited behind Stow's back — sed, a
+The repair tool for the times a file gets edited behind stw's back — sed, a
 human in the folder, whatever. On an untouched workspace this must read no
 file contents: stat every included path, compare (size, mtime_ns) against the
 registry, and only hash on a mismatch (or under --force).

@@ -12,8 +12,8 @@ import time
 
 from helpers import seed
 
-from stow.commands import sync as sync_cmd
-from stow.db import connect
+from stw.commands import sync as sync_cmd
+from stw.db import connect
 
 
 def _args(force=False, prune=True, json=False):

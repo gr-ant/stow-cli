@@ -45,7 +45,7 @@ def _seed_doc(cli):
 
 
 def _content_sha(ws_dir, path, heading_path):
-    conn = sqlite3.connect(str(ws_dir / ".stow" / "stow.db"))
+    conn = sqlite3.connect(str(ws_dir / ".stw" / "stw.db"))
     conn.row_factory = sqlite3.Row
     row = conn.execute(
         "SELECT content_sha FROM headings WHERE path = ? AND heading_path = ?",

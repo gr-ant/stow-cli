@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 
 from .. import db, history, out
-from ..errors import StowError, Usage
+from ..errors import stwError, Usage
 from ..hashing import short
 from ..index import reindex, reresolve_incoming
 
@@ -31,12 +31,12 @@ def run(ws, conn, args) -> int:
     matches = [r for r in rows if r["sha"].startswith(sha_part)]
     distinct = {m["sha"] for m in matches}
     if not matches:
-        raise StowError(
+        raise stwError(
             "E_NOT_FOUND", f"no version '{sha_part}' for {rel}",
             f"Run `stw log {rel}` to list them.",
         )
     if len(distinct) > 1:
-        raise StowError(
+        raise stwError(
             "E_AMBIGUOUS_SHA", f"'{sha_part}' matches {len(distinct)} versions of {rel}",
             "Use a longer prefix.",
         )

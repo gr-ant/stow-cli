@@ -1,8 +1,8 @@
 """Content-addressed history store (plan.md §3 'History').
 
 Every destructive write snapshots the CURRENT on-disk bytes of a path -
-before the change lands - into `.stow/objects/ab/cdef...`, zlib-compressed
-and keyed by sha256. Stow already hashes every file it touches, so this
+before the change lands - into `.stw/objects/ab/cdef...`, zlib-compressed
+and keyed by sha256. stw already hashes every file it touches, so this
 costs one zlib write and an index row; without it `stw write` would be an
 unrecoverable clobber on a workspace whose whole premise is constant editing.
 """
@@ -13,7 +13,7 @@ import sqlite3
 import zlib
 from pathlib import Path
 
-from .errors import StowError
+from .errors import stwError
 from .hashing import sha256_bytes
 from .index import now_iso
 from .workspace import Workspace
@@ -81,7 +81,7 @@ def rekey(conn: sqlite3.Connection, old_rel: str, new_rel: str) -> int:
 def read_version(ws: Workspace, sha: str) -> bytes:
     obj = _object_path(ws, sha)
     if not obj.exists():
-        raise StowError(
+        raise stwError(
             "E_NOT_FOUND", f"no history object {sha[:8]}…",
             "It may have been pruned by `stw gc`.",
         )

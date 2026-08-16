@@ -23,7 +23,7 @@ def ws_dir(tmp_path, monkeypatch):
 def run(*args: str, stdin: str | None = None, cwd: Path | None = None):
     """Invoke the CLI in-process-ish (subprocess for isolation). Returns CompletedProcess."""
     return subprocess.run(
-        [sys.executable, "-m", "stow", *args],
+        [sys.executable, "-m", "stw", *args],
         input=stdin,
         capture_output=True,
         text=True,

@@ -7,9 +7,9 @@ from __future__ import annotations
 import json
 import zlib
 
-from stow import history
-from stow.db import connect, tx
-from stow.workspace import Workspace
+from stw import history
+from stw.db import connect, tx
+from stw.workspace import Workspace
 
 
 def _versions(ws_dir, rel):
@@ -115,7 +115,7 @@ def test_history_disabled_skips_snapshot(tmp_path, monkeypatch):
 
     monkeypatch.chdir(tmp_path)
     run("init")
-    (tmp_path / ".stow" / "config.toml").write_text("[history]\nenabled = false\n")
+    (tmp_path / ".stw" / "config.toml").write_text("[history]\nenabled = false\n")
 
     ws = Workspace.at(tmp_path)
     conn = connect(ws.index_path)

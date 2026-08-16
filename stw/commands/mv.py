@@ -14,7 +14,7 @@ import shutil
 from pathlib import Path
 
 from .. import db, history, md, out
-from ..errors import Exists, NotFound, StowError
+from ..errors import Exists, NotFound, stwError
 from ..index import backlinks as backlinks_of
 from ..index import reindex, remove, reresolve_incoming
 
@@ -37,7 +37,7 @@ def run(ws, conn, args) -> int:
         new_rel = ws.rel(str(Path(args.new) / Path(old_rel).name))
         new_abs = ws.abs(new_rel)
     if new_rel == old_rel:
-        raise StowError("E_USAGE", "source and destination are the same path")
+        raise stwError("E_USAGE", "source and destination are the same path")
     if new_abs.exists() and not args.force:
         raise Exists(new_rel)
 

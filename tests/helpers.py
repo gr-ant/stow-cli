@@ -5,9 +5,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from stow.db import connect
-from stow.index import reindex, reresolve_incoming
-from stow.workspace import Workspace
+from stw.db import connect
+from stw.index import reindex, reresolve_incoming
+from stw.workspace import Workspace
 
 
 def seed(root: Path, files: dict[str, str]) -> Workspace:

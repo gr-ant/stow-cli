@@ -56,8 +56,8 @@ def test_db_export_round_trips_csv(ws_dir, cli):
     assert "10" in text and "20" in text
 
 
-def test_db_rejects_stow_index(ws_dir, cli):
-    r = cli("db", "tables", ".stow/stow.db")
+def test_db_rejects_stw_index(ws_dir, cli):
+    r = cli("db", "tables", ".stw/stw.db")
     assert r.returncode != 0
     assert "E_FORBIDDEN" in r.stderr
 
@@ -72,8 +72,8 @@ def test_db_new_registers_a_files_row(ws_dir, cli):
     r = cli("db", "new", "data/exp.db")
     assert r.returncode == 0
 
-    from stow.db import connect
-    from stow.workspace import Workspace
+    from stw.db import connect
+    from stw.workspace import Workspace
 
     ws = Workspace.at(ws_dir)
     conn = connect(ws.index_path)
@@ -143,8 +143,8 @@ def test_sql_ddl_refreshes_tables_registry(ws_dir, cli):
     assert "runs" in names
 
 
-def test_sql_rejects_stow_index(ws_dir, cli):
-    r = cli("sql", ".stow/stow.db", "SELECT 1")
+def test_sql_rejects_stw_index(ws_dir, cli):
+    r = cli("sql", ".stw/stw.db", "SELECT 1")
     assert r.returncode != 0
     assert "E_FORBIDDEN" in r.stderr
 
@@ -166,7 +166,7 @@ def test_duckdb_is_not_imported_at_module_load(ws_dir, cli, monkeypatch):
         # Importing the command modules themselves must not require duckdb.
         import importlib
 
-        for name in ("stow.commands.db", "stow.commands.sql"):
+        for name in ("stw.commands.db", "stw.commands.sql"):
             sys.modules.pop(name, None)
             importlib.import_module(name)
     finally:
@@ -176,7 +176,7 @@ def test_duckdb_is_not_imported_at_module_load(ws_dir, cli, monkeypatch):
 def test_missing_duckdb_raises_e_no_duckdb(monkeypatch):
     import sys
 
-    from stow.commands import db as db_cmd
+    from stw.commands import db as db_cmd
 
     monkeypatch.setitem(sys.modules, "duckdb", None)
     try:

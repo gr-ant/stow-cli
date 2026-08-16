@@ -13,17 +13,17 @@ from pathlib import Path
 from .. import out
 from ..config import TEMPLATE
 from ..db import connect
-from ..errors import StowError
+from ..errors import stwError
 from ..index import reindex
 from ..workspace import Workspace
 
-MARK_START = "<!-- stow:start -->"
-MARK_END = "<!-- stow:end -->"
+MARK_START = "<!-- stw:start -->"
+MARK_END = "<!-- stw:end -->"
 
 REFERENCE = """\
-## Workspace (stow)
+## Workspace (stw)
 
-This directory is a Stow workspace. Write through `stw` rather than editing
+This directory is a stw workspace. Write through `stw` rather than editing
 files directly: the index, the link graph, and `map.md` stay correct for free,
 and `stw undo` can recover an overwrite.
 
@@ -57,18 +57,18 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
 def run(ws, conn, args) -> int:
     root = Path(getattr(args, "dir", None) or args.path).resolve()
     root.mkdir(parents=True, exist_ok=True)
-    stow_dir = root / ".stow"
+    stw_dir = root / ".stw"
 
-    if stow_dir.exists() and not args.force:
-        raise StowError(
+    if stw_dir.exists() and not args.force:
+        raise stwError(
             "E_EXISTS",
             f"{root} is already a workspace",
             "Use --force to reinitialize, or `stw sync` to repair the index.",
         )
 
-    stow_dir.mkdir(exist_ok=True)
-    (stow_dir / "objects").mkdir(exist_ok=True)
-    cfg = stow_dir / "config.toml"
+    stw_dir.mkdir(exist_ok=True)
+    (stw_dir / "objects").mkdir(exist_ok=True)
+    cfg = stw_dir / "config.toml"
     if not cfg.exists():
         cfg.write_text(TEMPLATE)
 
