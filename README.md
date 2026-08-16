@@ -32,16 +32,8 @@ installer drops the source tree in `~/.local/share/stow-cli` and a launcher at
 `~/.local/bin/stw`, pinned to a system interpreter. Re-run it to upgrade;
 `install.sh --uninstall` removes it and leaves your workspaces alone.
 
-While this repo is private the one-liner needs a token:
-
-```sh
-curl -fsSL -H "Authorization: Bearer $(gh auth token)" \
-    https://raw.githubusercontent.com/gr-ant/stow-cli/main/install.sh \
-  | GITHUB_TOKEN=$(gh auth token) sh
-```
-
 Knobs: `STOW_PREFIX` (default `~/.local`), `STOW_REF` (branch/tag/sha),
-`STOW_REPO`.
+`STOW_REPO`. Set `GITHUB_TOKEN` to install from a private fork.
 
 From a checkout instead:
 
