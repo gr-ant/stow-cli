@@ -74,7 +74,11 @@ PY=$(find_python) || die "no python $MIN_PY+ found. stw needs tomllib, which arr
 PYV=$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])')
 
 # -- download --------------------------------------------------------------
+# Two sources: codeload is unmetered but serves stale 404s for a while after a
+# repo rename; the API tarball endpoint is immediately correct but rate-limited
+# when unauthenticated. Try the cheap one, fall back to the reliable one.
 TARBALL="https://codeload.github.com/$REPO/tar.gz/$REF"
+TARBALL_ALT="https://api.github.com/repos/$REPO/tarball/$REF"
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/stw-install.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT INT TERM
 
@@ -98,7 +102,10 @@ fetch() {
 }
 
 say "fetching $REPO@$REF"
-if ! fetch "$TARBALL" "$TMP/src.tar.gz"; then
+if ! fetch "$TARBALL" "$TMP/src.tar.gz" 2>/dev/null; then
+    fetch "$TARBALL_ALT" "$TMP/src.tar.gz" 2>/dev/null || FETCH_FAILED=1
+fi
+if [ "${FETCH_FAILED:-}" = 1 ] || [ ! -s "$TMP/src.tar.gz" ]; then
     if [ -z "${GITHUB_TOKEN:-}" ]; then
         die "download failed. If $REPO is private, set GITHUB_TOKEN — e.g.
     curl -fsSL -H \"Authorization: Bearer \$(gh auth token)\" \\
