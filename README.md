@@ -23,7 +23,27 @@ of machines already have on PATH (plan.md §14).
 
 ## Install
 
-Python 3.11+. No required dependencies.
+```sh
+curl -fsSL https://raw.githubusercontent.com/gr-ant/stow-cli/main/install.sh | sh
+```
+
+Python 3.11+ (for `tomllib`), and nothing else — `stw` is stdlib-only. The
+installer drops the source tree in `~/.local/share/stow-cli` and a launcher at
+`~/.local/bin/stw`, pinned to a system interpreter. Re-run it to upgrade;
+`install.sh --uninstall` removes it and leaves your workspaces alone.
+
+While this repo is private the one-liner needs a token:
+
+```sh
+curl -fsSL -H "Authorization: Bearer $(gh auth token)" \
+    https://raw.githubusercontent.com/gr-ant/stow-cli/main/install.sh \
+  | GITHUB_TOKEN=$(gh auth token) sh
+```
+
+Knobs: `STOW_PREFIX` (default `~/.local`), `STOW_REF` (branch/tag/sha),
+`STOW_REPO`.
+
+From a checkout instead:
 
 ```sh
 pip install -e .            # core

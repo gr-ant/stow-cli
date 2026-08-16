@@ -1,0 +1,158 @@
+#!/bin/sh
+# Install stw — a CLI workspace manager for agents.
+#
+#   curl -fsSL https://raw.githubusercontent.com/gr-ant/stow-cli/main/install.sh | sh
+#
+# Installs the source tree under $PREFIX/share/stow-cli and a launcher at
+# $PREFIX/bin/stw. There are no dependencies to resolve: stw is stdlib-only, and
+# numpy/duckdb stay optional (see README).
+#
+# Environment:
+#   STOW_PREFIX    install root            (default: $HOME/.local)
+#   STOW_REF       branch, tag, or sha     (default: main)
+#   STOW_REPO      owner/name              (default: gr-ant/stow-cli)
+#   GITHUB_TOKEN   auth, required while the repo is private
+#
+# Flags: --uninstall
+
+set -eu
+
+REPO="${STOW_REPO:-gr-ant/stow-cli}"
+REF="${STOW_REF:-main}"
+PREFIX="${STOW_PREFIX:-$HOME/.local}"
+BIN="$PREFIX/bin"
+LIB="$PREFIX/share/stow-cli"
+MIN_PY="3.11"
+
+say()  { printf '%s\n' "$*"; }
+die()  { printf 'install: %s\n' "$*" >&2; exit 1; }
+
+uninstall() {
+    # Note: every conditional here is an `if`, not `test && cmd`. Under `set -e`
+    # a bare `test && cmd` whose test fails exits the script.
+    removed=0
+    if [ -e "$BIN/stw" ]; then rm -f "$BIN/stw"; say "removed $BIN/stw"; removed=1; fi
+    if [ -d "$LIB" ]; then rm -rf "$LIB"; say "removed $LIB"; removed=1; fi
+    if [ "$removed" = 0 ]; then say "stw is not installed under $PREFIX"; fi
+    say "Workspaces are untouched — .stow/ directories are yours, not the installer's."
+    exit 0
+}
+
+if [ "${1:-}" = "--uninstall" ]; then uninstall; fi
+
+# -- python ----------------------------------------------------------------
+# 3.11 is the floor: tomllib (config parsing) landed there.
+#
+# The launcher pins whatever we pick, so prefer a system interpreter over an
+# activated virtualenv — pinning someone's project venv means stw breaks the day
+# that venv is deleted. Only fall back to a venv if nothing else qualifies.
+check_python() {
+    # $1 interpreter, $2 "system" to also require it not be a venv
+    "$1" -c '
+import sys
+ok = sys.version_info[:2] >= (3, 11)
+if len(sys.argv) > 1 and sys.argv[1] == "system":
+    ok = ok and sys.prefix == sys.base_prefix
+raise SystemExit(0 if ok else 1)
+' "${2:-}" 2>/dev/null
+}
+
+find_python() {
+    for mode in system any; do
+        for c in /usr/bin/python3 /usr/local/bin/python3 python3 \
+                 python3.14 python3.13 python3.12 python3.11; do
+            p=$(command -v "$c" 2>/dev/null) || continue
+            if check_python "$p" "$mode"; then printf '%s' "$p"; return 0; fi
+        done
+    done
+    return 1
+}
+
+PY=$(find_python) || die "no python $MIN_PY+ found. stw needs tomllib, which arrived in $MIN_PY."
+PYV=$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+
+# -- download --------------------------------------------------------------
+TARBALL="https://codeload.github.com/$REPO/tar.gz/$REF"
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/stow-install.XXXXXX")
+trap 'rm -rf "$TMP"' EXIT INT TERM
+
+fetch() {
+    # $1 url, $2 output path
+    if command -v curl >/dev/null 2>&1; then
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+            curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" -o "$2" "$1"
+        else
+            curl -fsSL -o "$2" "$1"
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+            wget -qO "$2" --header="Authorization: Bearer $GITHUB_TOKEN" "$1"
+        else
+            wget -qO "$2" "$1"
+        fi
+    else
+        die "neither curl nor wget is available"
+    fi
+}
+
+say "fetching $REPO@$REF"
+if ! fetch "$TARBALL" "$TMP/src.tar.gz"; then
+    if [ -z "${GITHUB_TOKEN:-}" ]; then
+        die "download failed. If $REPO is private, set GITHUB_TOKEN — e.g.
+    curl -fsSL -H \"Authorization: Bearer \$(gh auth token)\" \\
+        https://raw.githubusercontent.com/$REPO/main/install.sh \\
+      | GITHUB_TOKEN=\$(gh auth token) sh"
+    fi
+    die "download failed. Check GITHUB_TOKEN and that $REF exists in $REPO."
+fi
+
+tar -xzf "$TMP/src.tar.gz" -C "$TMP" || die "the download is not a valid tarball (auth failure returns HTML)"
+SRC=$(find "$TMP" -maxdepth 2 -type d -name stow -print -quit)
+if [ -z "$SRC" ] || [ ! -f "$SRC/cli.py" ]; then
+    die "unpacked tree has no stow/ package"
+fi
+
+# -- install ---------------------------------------------------------------
+mkdir -p "$BIN" "$(dirname "$LIB")"
+rm -rf "$LIB.new"
+mkdir -p "$LIB.new"
+cp -R "$SRC" "$LIB.new/stow"
+find "$LIB.new" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+
+# Precompiling costs a second here and saves ~5ms on every invocation, which
+# matters for a CLI an agent calls dozens of times per task.
+"$PY" -m compileall -q "$LIB.new/stow" >/dev/null 2>&1 || true
+
+rm -rf "$LIB.old"
+if [ -d "$LIB" ]; then mv "$LIB" "$LIB.old"; fi
+mv "$LIB.new" "$LIB"
+rm -rf "$LIB.old"
+
+# The launcher pins the interpreter it was installed with, so a later PATH
+# change can't silently point stw at a python too old to run it.
+cat > "$BIN/stw" <<LAUNCHER
+#!/bin/sh
+# generated by the stow-cli installer
+PYTHONPATH="$LIB\${PYTHONPATH:+:\$PYTHONPATH}" exec "$PY" -m stow "\$@"
+LAUNCHER
+chmod +x "$BIN/stw"
+
+VERSION=$("$BIN/stw" --version 2>/dev/null || echo "?")
+
+say ""
+say "stw $VERSION installed"
+say "  binary   $BIN/stw"
+say "  library  $LIB"
+say "  python   $PY ($PYV)"
+
+case ":$PATH:" in
+    *":$BIN:"*) ;;
+    *)
+        say ""
+        say "$BIN is not on your PATH. Add it:"
+        say "  echo 'export PATH=\"$BIN:\$PATH\"' >> ~/.bashrc && exec \$SHELL"
+        ;;
+esac
+
+say ""
+say "Next: cd into a directory and run \`stw init\`, then \`stw help\`."
