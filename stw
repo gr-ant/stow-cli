@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Dev entry point: prefer the project venv, fall back to python3.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+py="$here/.venv/bin/python"
+[ -x "$py" ] || py="$(command -v python3)"
+exec "$py" -m stow "$@"
